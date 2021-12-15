@@ -8,4 +8,4 @@ validation_data = ds.melParamData("validation","data")
 
 print(train_data[40])
 print(test_data[40])
-print(validation_data[40])
+print(validation_data[400])
