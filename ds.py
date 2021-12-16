@@ -26,6 +26,17 @@ class melParamData():
             self.mels = np.load(dir + "/test_mel_features.npy")[1000:]
             self.params = np.load(dir + "/test_patches.npy")[1000:]
 
+        #delete elements where spectrogram is zero
+        zero_locations = np.where(np.min(self.mels, axis=(1,2))==0.0)[0]
+        self.mels = np.delete(self.mels, zero_locations, axis=0)
+        self.params = np.delete(self.params, zero_locations, axis=0)
+
+
+        #normalize mel spectrogram
+        for i,mel in enumerate(self.mels):
+            self.mels[i] = (mel - np.min(mel))
+            self.mels[i] = self.mels[i] / np.max(self.mels[i])
+
         #set input and output size
         self.input_size = self.mels[0].shape
         self.output_size = self.params[0].shape
