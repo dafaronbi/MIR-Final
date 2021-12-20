@@ -8,11 +8,20 @@ import numpy as np
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
+import spiegelib
 
 #load data
+print("Loading Data...")
 train_data = ds.melParamData("train","data")
 test_data = ds.melParamData("test","data")
 validation_data = ds.melParamData("validation","data")
+print("Done!")
+
+
+
+
+# print(serum_param_dic)
+# print(test_synth)
 
 #directory for finding checkpoints
 checkpoint_path = "new_models4/cp-{epoch:04d}.ckpt"
@@ -39,11 +48,11 @@ loss, loss1,loss2 = autoencoder.evaluate(test_data.get_mels(),[test_data.get_mel
 print("test model loss = " + str(loss) + "\n test model spectrogram loss = "+ str(loss1) + "\n test model synth_param loss = "+ str(loss2))
 
 #get prediction
-spectogram,params = autoencoder.predict(train_data.get_mels()[[30]])
+spectogram,params = autoencoder.predict(train_data.get_mels()[[2000]])
 
 #evaluate reconstruction of 30th test file
 fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
-img = librosa.display.specshow(train_data.get_mels()[30], y_axis='mel', x_axis='time', ax=ax[0])
+img = librosa.display.specshow(train_data.get_mels()[2000], y_axis='mel', x_axis='time', ax=ax[0])
 
 ax[0].set(title='Mel-Frequency Spectrogram Reconstruction')
 ax[0].label_outer()
@@ -52,7 +61,32 @@ librosa.display.specshow(np.squeeze(spectogram), y_axis='mel', x_axis='time', ax
 fig.colorbar(img, ax=ax, format="%+2.f dB")
 
 
-print("Ground Truth Parameters:" + str(test_data.get_params()[500]-params))
+# print("Ground Truth Parameters:" + str(test_data.get_params()[500]-params))
 # print("Predicted Parameters" + str(params))
 
+plt.show()
+
+test_synth = train_data.get_params()[2000]
+
+#create serum synthesizer object
+synth = spiegelib.synth.SynthVST("/Library/Audio/Plug-Ins/Components/Serum.component")
+
+#generate ground truth audio from synth parameters
+synth.set_patch(test_synth)
+synth.render_patch()
+audio = synth.get_audio()
+audio.plot_spectrogram()
+audio.save("test_audio.wav")
+
+#show plots
+plt.show()
+
+#generate predict audio from synth parameters
+synth.set_patch(np.squeeze(params))
+synth.render_patch()
+audio = synth.get_audio()
+audio.plot_spectrogram()
+audio.save("predict_audio.wav")
+
+#show plots
 plt.show()
